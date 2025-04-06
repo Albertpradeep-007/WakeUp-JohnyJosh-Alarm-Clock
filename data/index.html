@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ESP32 Alarm Control</title>
+  <style>
+    :root {
+      --primary: #e74c3c;
+      --bg: #1c1c1c;
+      --card: #2c2c2c;
+      --text: #fff;
+      --highlight: #3498db;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .card {
+      background: var(--card);
+      padding: 1.5rem;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: 1rem;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    }
+    .card h2 {
+      margin-bottom: 1rem;
+      font-size: 1.4rem;
+      color: var(--highlight);
+    }
+    label {
+      display: block;
+      margin-top: 0.8rem;
+      margin-bottom: 0.2rem;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 0.5rem;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      border: none;
+      border-radius: 6px;
+    }
+    input[type="time"], input[type="date"] {
+      background: #444;
+      color: white;
+    }
+    button {
+      background-color: var(--primary);
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background-color: #c0392b;
+    }
+    .sensor-display {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Date & Time Control</h2>
+    <label for="date">Set Date</label>
+    <input type="date" id="date" />
+
+    <label for="time">Set Time</label>
+    <input type="time" id="time" />
+
+    <button onclick="updateTime()">Update RTC</button>
+  </div>
+
+  <div class="card">
+    <h2>Alarm Setup</h2>
+    <label for="alarm">Alarm Time</label>
+    <input type="time" id="alarm" />
+    <button onclick="setAlarm()">Set Alarm</button>
+  </div>
+
+  <div class="card">
+    <h2>Sensor Readings</h2>
+    <div class="sensor-display">
+      <strong>Temp:</strong> <span id="temp">--</span> °C
+    </div>
+    <div class="sensor-display">
+      <strong>Humidity:</strong> <span id="hum">--</span> %
+    </div>
+    <button onclick="refreshSensors()">Refresh</button>
+  </div>
+
+  <script>
+    function updateTime() {
+      const date = document.getElementById('date').value;
+      const time = document.getElementById('time').value;
+      fetch(`/setrtc?date=${date}&time=${time}`);
+    }
+
+    function setAlarm() {
+      const alarm = document.getElementById('alarm').value;
+      fetch(`/setalarm?time=${alarm}`);
+    }
+
+    function refreshSensors() {
+      fetch('/getdata')
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('temp').innerText = data.temp;
+          document.getElementById('hum').innerText = data.hum;
+        });
+    }
+
+    setInterval(refreshSensors, 3000);
+    refreshSensors();
+  </script>
+</body>
+</html>
